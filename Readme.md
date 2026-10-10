@@ -1,16 +1,16 @@
 # Blog Application - 3-Tier Architecture
 
-A complete educational project demonstrating a 3-tier application architecture with React, Go, and PostgreSQL, containerized with Docker and deployable to AWS.
+A complete educational project demonstrating a 3-tier application architecture with React, Go, and PostgreSQL, containerized with Docker and deployable to AWS using **EC2 + Docker**.
 
 ## 🎯 Purpose
 
-This project is designed to teach **Docker** and **3-tier deployment** patterns. It includes:
+This project is designed to teach **Docker** and **3-tier deployment** patterns with a focus on **EC2 + Docker** workflow. It includes:
 
 - **Frontend**: React + Vite (modern, fast client-side rendering)
 - **Backend**: Go HTTP API (performance-oriented server-side logic)
 - **Database**: PostgreSQL (relational data storage)
 
-Each component has its own Dockerfile and they orchestrate together via Docker Compose. The application is ready for AWS deployment using ECR + EC2 or ECS Fargate.
+Each component has its own Dockerfile and they orchestrate together via Docker Compose. The application is ready for deployment to an **EC2 instance** using Docker.
 
 ## 📁 Project Structure
 
@@ -33,7 +33,7 @@ crud-app/
 
 ## ⚡ Quick Start
 
-### Using Docker Compose (Recommended)
+### Using Docker Compose (Recommended - Local Development)
 
 ```bash
 # Start all services
@@ -50,7 +50,7 @@ curl -s http://localhost:8080/api/posts
 curl -s http://localhost:3000
 ```
 
-### Without Docker
+### Without Docker (Local Development)
 
 **Backend:**
 ```bash
@@ -66,7 +66,7 @@ npm install
 npm run dev
 ```
 
-**Database:** Ensure PostgreSQL is running with `blog` database, user `postgres`, password `postgres`.
+**Database:** Ensure PostgreSQL is running with the `blog` database, user `postgres`, and password `postgres`.
 
 ## 🐳 Docker Architecture
 
@@ -170,67 +170,95 @@ volumes:
 - Named volumes for data persistence
 - Environment variable injection
 
-## 🚀 AWS Deployment
+## 🚀 AWS Deployment - EC2 + Docker
 
-### Option 1: ECR + EC2 (Recommended for learning)
+This pathway deploys the application to an **EC2 instance** using Docker directly. No ECS, no Fargate, no additional AWS services required - just EC2 and Docker.
 
-**Step 1: Push images to Amazon ECR**
+### Step 1: Launch EC2 Instance
 
+- **Amazon Linux 2023** or **Ubuntu Server**
+- **Security groups**: Allow ports:
+  - 22 (SSH)
+  - 80 (HTTP - frontend)
+  - 5433 (PostgreSQL)
+- **Key pair** for SSH access
+
+### Step 2: Install Docker on EC2
+
+**For Amazon Linux 2023:**
 ```bash
-# Authenticate
-aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin <account-id>.dkr.ecr.us-east-1.amazonaws.com
-
-# Tag and push frontend
-docker tag crudapp-frontend:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/crudapp-frontend:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/crudapp-frontend:latest
-
-# Tag and push backend
-docker tag crudapp-backend:latest <account-id>.dkr.ecr.us-east-1.amazonaws.com/crudapp-backend:latest
-docker push <account-id>.dkr.ecr.us-east-1.amazonaws.com/crudapp-backend:latest
-
-# PostgreSQL uses official image from Docker Hub
-```
-
-**Step 2: Launch EC2 Instance**
-
-- Amazon Linux 2023 or Ubuntu Server
-- Security groups: Allow ports 22 (SSH), 80 (HTTP), 5433 (Postgres)
-- Key pair for SSH access
-
-**Step 3: Deploy on EC2**
-
-```bash
-# On EC2 instance
-sudo yum install -y docker docker-compose  # Amazon Linux
+sudo yum install -y docker docker-compose
 sudo service docker start
 sudo usermod -a -G docker ec2-user
-
-# Pull and run
-docker pull <account-id>.dkr.ecr.us-east-1.amazonaws.com/crudapp-frontend:latest
-docker pull <account-id>.dkr.ecr.us-east-1.amazonaws.com/crudapp-backend:latest
-
-# Using docker compose
-cd /path/to/project
-docker compose up -d
 ```
 
-**Step 4: Access Application**
+**For Ubuntu:**
+```bash
+sudo apt-get update
+sudo apt-get install -y docker.io docker-compose
+sudo usermod -a -G docker $USER
+```
 
-- Frontend: http://<EC2-public-ip>/  (or via ALB)
-- Backend API: http://<EC2-public-ip>:8080/api/posts
+### Step 3: Pull and Run the Application
 
-### Option 2: ECS Fargate (Managed)
+```bash
+# On EC2 instance via SSH
 
-1. Create ECS cluster
-2. Register task definition using ECR images
-3. Deploy service with Fargate launch type
-4. Set up ALB with target groups
+# Option A: Pull pre-built images from Docker Hub
+docker pull postgres:15                          # Database
+docker pull your-dockerhub-username/crudapp-backend:latest  # Backend
+docker pull your-dockerhub-username/crudapp-frontend:latest  # Frontend
 
-### Option 3: Elastic Beanstalk
+# Or build on EC2 directly from this repository
+cd /path/to/crud-app
+docker compose up -d  # Uses local docker-compose.yml
 
-- **Frontend**: S3 + CloudFront static website
-- **Backend**: Docker container on EB
-- **Database**: Amazon RDS PostgreSQL
+# Verify running containers
+docker compose ps
+```
+
+### Step 4: Access the Application
+
+- **Frontend**: http://<EC2-public-ip>:3000
+  - Or configure Nginx reverse proxy on port 80 for clean URL
+- **Backend API**: http://<EC2-public-ip>:8080/api/posts
+- **PostgreSQL**: localhost:5433 (host) → 5432 (container)
+  - Or migrate to Amazon RDS for production reliability
+
+**Example access:**
+```bash
+# Test frontend
+curl -s http://<EC2-public-ip>:3000
+
+# Test backend API
+curl -s http://<EC2-public-ip>:8080/api/posts
+
+# Create a new post
+curl -s -X POST -d "title=My Post" -d "content=Hello" http://<EC2-public-ip>:8080/api/posts
+```
+
+### Step 5: (Optional) Production Enhancements
+
+- **Domain & HTTPS**: Purchase domain through Route 53, configure ACM certificate, set up Nginx reverse proxy on EC2
+- **Load Balancer**: Add Application Load Balancer (ALB) in front of EC2 for high availability
+- **Database**: Migrate from container PostgreSQL to Amazon RDS for automated backups and reliability
+- **Monitoring**: Use CloudWatch basic metrics (included in free tier)
+- **Auto Scaling**: Configure EC2 auto-scaling group if needed
+
+---
+
+## 📊 EC2 vs Other Approaches
+
+| Factor | **EC2 + Docker (This Guide)** |
+|--------|-------------------------------|
+| **Cost** | Just EC2 instance cost (lowest option) |
+| **Complexity** | Simple - just Docker on EC2 |
+| **Scalability** | Manual EC2 scaling |
+| **Management** | You manage the Docker containers |
+| **Best for** | Learning Docker, small projects, cost efficiency |
+| **Production** | Good for small-mid apps, requires ops attention |
+
+---
 
 ## 🔌 API Endpoints
 
@@ -259,18 +287,21 @@ curl -X POST http://localhost:8080/api/posts \
 {"posts": [{"id": "1", "title": "My First Post", "content": "Hello World"}]}
 ```
 
-## 📚 Learning Objectives
+---
 
-Through this project, you will learn:
+## 📚 Learning Outcomes
 
-1. **Docker fundamentals**: Images, containers, networks, volumes
-2. **Multi-stage builds**: Reducing image size, separation of concerns
-3. **Docker Compose**: Multi-container orchestration, service dependencies
-4. **3-tier architecture**: Separation of presentation, logic, and data
-5. **Go backend development**: REST API, PostgreSQL integration
-6. **React frontend development**: Vite build, component architecture
-7. **AWS deployment**: ECR, EC2, ECS Fargate, Elastic Beanstalk
-8. **Environment configuration**: DATABASE_URL, VITE_API_URL patterns
+After completing this tutorial, you will be able to:
+
+- ✅ Design and implement a 3-tier application architecture
+- ✅ Write multi-stage Dockerfiles for optimized image sizes
+- ✅ Orchestrate multi-container applications with Docker Compose
+- ✅ Deploy Docker applications to AWS EC2
+- ✅ Configure service dependencies, networks, and volumes
+- ✅ troubleshoot common Docker and deployment issues
+- ✅ Plan EC2-based hosting considerations
+
+---
 
 ## 🐛 Troubleshooting
 
@@ -285,7 +316,7 @@ docker compose up -d
 
 **Backend can't connect to database:**
 - Ensure `db` service is running: `docker compose ps`
-- Check network: `docker network inspect crudapp_default`
+- Check network connectivity
 - Verify DATABASE_URL matches docker-compose environment variables
 
 **Frontend can't reach API:**
@@ -297,29 +328,45 @@ docker compose up -d
 - Increase EC2 instance size
 - Monitor with: `docker stats --no-stream`
 
-## 📦 Production Checklist
+**Cannot connect to EC2 via SSH:**
+- Check security groups allow port 22
+- Verify key pair is correct
+- Ensure instance is running
 
-- [ ] Use RDS PostgreSQL instead of container database
-- [ ] Configure Application Load Balancer (ALB)
+---
+
+## 📦 Production Checklist (EC2)
+
+- [ ] Use Amazon RDS PostgreSQL instead of container database
+- [ ] Configure Application Load Balancer (ALB) in front of EC2
 - [ ] Set up SSL/TLS certificates (ACM + Route 53)
 - [ ] Implement health checks in Docker Compose
 - [ ] Add environment variable validation
 - [ ] Configure logging to CloudWatch
-- [ ] Set up automated backups for database
+- [ ] Set up automated RDS backups
 - [ ] Implement CI/CD pipeline for Docker image updates
 - [ ] Add rate limiting and security headers
 - [ ] Monitor with CloudWatch Dashboards
 
-## 🤝 Contributing
+---
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add some amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## 📦 Next Steps
+
+1. **Experiment**: Modify the Go API, add new endpoints, change the React UI
+2. **Scale**: Add a second EC2 instance, configure manual load balancing
+3. **Secure**: Implement authentication, add HTTPS via Nginx/ACM
+4. **Optimize**: Analyze image sizes, improve database queries
+5. **Automate**: Set up simple deployment script for future updates
+
+---
+
+## 📖 Tutorial Reference
+
+For step-by-step local setup instructions, see the companion tutorial:
+- `DOCKER-3TIER-TUTORIAL.md` - Complete guide from project creation to local running
 
 ---
 
 **Built with ❤️ for teaching Docker and cloud deployment**
 
-*This project demonstrates modern full-stack development practices with containerization at the core.*
+*This project demonstrates modern full-stack development practices with containerization at the core, focused on EC2 + Docker deployment pathway.*
