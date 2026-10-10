@@ -1,18 +1,18 @@
 # Blog Application - 3-Tier Architecture
 
-A complete educational project demonstrating a 3-tier application architecture with React, Go, and PostgreSQL, containerized with Docker and deployable to AWS using **EC2 + Docker**.
+A complete educational project demonstrating a 3-tier application architecture with React, Go, and PostgreSQL, containerized with Docker and deployable to AWS using EC2 + Docker.
 
-## 🎯 Purpose
+## Purpose
 
-This project is designed to teach **Docker** and **3-tier deployment** patterns with a focus on **EC2 + Docker** workflow. It includes:
+This project is designed to teach Docker and 3-tier deployment patterns with a focus on EC2 + Docker workflow. It includes:
 
-- **Frontend**: React + Vite (modern, fast client-side rendering)
-- **Backend**: Go HTTP API (performance-oriented server-side logic)
-- **Database**: PostgreSQL (relational data storage)
+- Frontend: React + Vite (modern, fast client-side rendering)
+- Backend: Go HTTP API (performance-oriented server-side logic)
+- Database: PostgreSQL (relational data storage)
 
-Each component has its own Dockerfile and they orchestrate together via Docker Compose. The application is ready for deployment to an **EC2 instance** using Docker.
+Each component has its own Dockerfile and they orchestrate together via Docker Compose. The application is ready for deployment to an EC2 instance using Docker.
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 crud-app/
@@ -31,7 +31,7 @@ crud-app/
 └── .github/              # (Optional) GitHub workflows
 ```
 
-## ⚡ Quick Start
+## Quick Start
 
 ### Using Docker Compose (Recommended - Local Development)
 
@@ -68,9 +68,9 @@ npm run dev
 
 **Database:** Ensure PostgreSQL is running with the `blog` database, user `postgres`, and password `postgres`.
 
-## 🐳 Docker Architecture
+## Docker Architecture
 
-This project demonstrates **multi-stage builds** best practices:
+This project demonstrates multi-stage builds best practices:
 
 ### Backend Dockerfile
 
@@ -170,18 +170,18 @@ volumes:
 - Named volumes for data persistence
 - Environment variable injection
 
-## 🚀 AWS Deployment - EC2 + Docker
+## AWS Deployment - EC2 + Docker
 
-This pathway deploys the application to an **EC2 instance** using Docker directly. No ECS, no Fargate, no additional AWS services required - just EC2 and Docker.
+This pathway deploys the application to an EC2 instance using Docker directly. No ECS, no Fargate, no additional AWS services required - just EC2 and Docker.
 
 ### Step 1: Launch EC2 Instance
 
-- **Amazon Linux 2023** or **Ubuntu Server**
-- **Security groups**: Allow ports:
+- Amazon Linux 2023 or Ubuntu Server
+- Security groups: Allow ports:
   - 22 (SSH)
   - 80 (HTTP - frontend)
   - 5433 (PostgreSQL)
-- **Key pair** for SSH access
+- Key pair for SSH access
 
 ### Step 2: Install Docker on EC2
 
@@ -245,12 +245,10 @@ curl -s -X POST -d "title=My Post" -d "content=Hello" http://<EC2-public-ip>:808
 - **Monitoring**: Use CloudWatch basic metrics (included in free tier)
 - **Auto Scaling**: Configure EC2 auto-scaling group if needed
 
----
+## EC2 vs Other Approaches
 
-## 📊 EC2 vs Other Approaches
-
-| Factor | **EC2 + Docker (This Guide)** |
-|--------|-------------------------------|
+| Factor | EC2 + Docker (This Guide) |
+|--------|---------------------------|
 | **Cost** | Just EC2 instance cost (lowest option) |
 | **Complexity** | Simple - just Docker on EC2 |
 | **Scalability** | Manual EC2 scaling |
@@ -258,17 +256,15 @@ curl -s -X POST -d "title=My Post" -d "content=Hello" http://<EC2-public-ip>:808
 | **Best for** | Learning Docker, small projects, cost efficiency |
 | **Production** | Good for small-mid apps, requires ops attention |
 
----
-
-## 🔌 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `GET` | `/api/posts` | Retrieve all posts |
-| `POST` | `/api/posts` | Create new post (form data: title, content) |
-| `GET` | `/api/posts/{id}` | Retrieve single post by ID |
-| `PUT` | `/api/posts/{id}` | Update post by ID |
-| `DELETE` | `/api/posts/{id}` | Delete post by ID |
+| GET | /api/posts | Retrieve all posts |
+| POST | /api/posts | Create new post (form data: title, content) |
+| GET | /api/posts/{id} | Retrieve single post by ID |
+| PUT | /api/posts/{id} | Update post by ID |
+| DELETE | /api/posts/{id} | Delete post by ID |
 
 **Example - Create post:**
 ```bash
@@ -287,23 +283,19 @@ curl -X POST http://localhost:8080/api/posts \
 {"posts": [{"id": "1", "title": "My First Post", "content": "Hello World"}]}
 ```
 
----
-
-## 📚 Learning Outcomes
+## Learning Outcomes
 
 After completing this tutorial, you will be able to:
 
-- ✅ Design and implement a 3-tier application architecture
-- ✅ Write multi-stage Dockerfiles for optimized image sizes
-- ✅ Orchestrate multi-container applications with Docker Compose
-- ✅ Deploy Docker applications to AWS EC2
-- ✅ Configure service dependencies, networks, and volumes
-- ✅ troubleshoot common Docker and deployment issues
-- ✅ Plan EC2-based hosting considerations
+- Design and implement a 3-tier application architecture
+- Write multi-stage Dockerfiles for optimized image sizes
+- Orchestrate multi-container applications with Docker Compose
+- Deploy Docker applications to AWS EC2
+- Configure service dependencies, networks, and volumes
+- troubleshoot common Docker and deployment issues
+- Plan EC2-based hosting considerations
 
----
-
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -333,9 +325,7 @@ docker compose up -d
 - Verify key pair is correct
 - Ensure instance is running
 
----
-
-## 📦 Production Checklist (EC2)
+## Production Checklist (EC2)
 
 - [ ] Use Amazon RDS PostgreSQL instead of container database
 - [ ] Configure Application Load Balancer (ALB) in front of EC2
@@ -348,9 +338,7 @@ docker compose up -d
 - [ ] Add rate limiting and security headers
 - [ ] Monitor with CloudWatch Dashboards
 
----
-
-## 📦 Next Steps
+## Next Steps
 
 1. **Experiment**: Modify the Go API, add new endpoints, change the React UI
 2. **Scale**: Add a second EC2 instance, configure manual load balancing
@@ -358,15 +346,13 @@ docker compose up -d
 4. **Optimize**: Analyze image sizes, improve database queries
 5. **Automate**: Set up simple deployment script for future updates
 
----
-
-## 📖 Tutorial Reference
+## Tutorial Reference
 
 For step-by-step local setup instructions, see the companion tutorial:
 - `DOCKER-3TIER-TUTORIAL.md` - Complete guide from project creation to local running
 
 ---
 
-**Built with ❤️ for teaching Docker and cloud deployment**
+Built with for teaching Docker and cloud deployment
 
 *This project demonstrates modern full-stack development practices with containerization at the core, focused on EC2 + Docker deployment pathway.*

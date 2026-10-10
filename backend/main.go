@@ -35,7 +35,7 @@ func main() {
 				return
 			}
 			defer rows.Close()
-			var postsdb.Query("SELECT id, title, content FROM posts") []map[string]string
+			var posts []map[string]string
 			for rows.Next() {
 				var id, title, content string
 				rows.Scan(&id, &title, &content)
